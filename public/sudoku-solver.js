@@ -40,10 +40,6 @@ const completedPuzzleValid = (puzzleString) => {
 };
 
 const getBoxes = (puzzleString) => {
-  if (!completedPuzzleValid(puzzleString)) {
-    return [];
-  }
-
   const boxes = puzzleString
     .match(/.{27}/g)
     .map((boxRow) => {
@@ -61,7 +57,7 @@ const getBoxes = (puzzleString) => {
     }, [])
     .map((box) => {
       return box.map((cell) => {
-        const number = parseInt(cell);
+        const number = parseInt(cell) || '';
 
         return number;
       });
@@ -71,10 +67,6 @@ const getBoxes = (puzzleString) => {
 };
 
 const getRows = (puzzleString) => {
-  if (!completedPuzzleValid(puzzleString)) {
-    return [];
-  }
-
   const rows = puzzleString
     .match(/.{9}/g)
     .map((rowString) => {
@@ -82,7 +74,7 @@ const getRows = (puzzleString) => {
     })
     .map((row) => {
       return row.map((cell) => {
-        const number = parseInt(cell);
+        const number = parseInt(cell) || '';
 
         return number;
       });
@@ -92,13 +84,9 @@ const getRows = (puzzleString) => {
 };
 
 const getColumns = (puzzleString) => {
-  if (!completedPuzzleValid(puzzleString)) {
-    return [];
-  }
-
   const columns = puzzleString.split('').reduce((result, cell, index) => {
     const rowIndex = index % 9;
-    const number = parseInt(cell);
+    const number = parseInt(cell) || '';
 
     result[rowIndex] = [...result[rowIndex], number];
 
@@ -109,6 +97,10 @@ const getColumns = (puzzleString) => {
 };
 
 const SolutionValid = (puzzleString) => {
+  if (!completedPuzzleValid(puzzleString)) {
+    return false;
+  }
+
   const boxes = getBoxes(puzzleString);
   const rows = getRows(puzzleString);
   const columns = getColumns(puzzleString);
@@ -121,26 +113,26 @@ const SolutionValid = (puzzleString) => {
 };
 
 const GetGrid = (puzzleString) => {
-  const grid = {};
-
   if (!puzzleValid(puzzleString)) {
     const errorDiv = document.getElementById('error-msg');
     errorDiv.innerHTML = 'Error: Expected puzzle to be 81 characters long.';
 
-    return grid;
+    return {};
   }
 
-  puzzleString.split('').forEach((char, index) => {
-    const number = parseInt(char);
+  const grid = getRows(puzzleString).reduce((result, row, rowIndex) => {
+    const rowLetter = String.fromCharCode(rowIndex + 65);
 
-    if (number) {
-      const row = Math.floor(index / 9);
-      const column = (index % 9) + 1;
-      const cell = String.fromCharCode(row + 65) + column;
+    row.forEach((cell, columnIndex) => {
+      const cellIndex = rowLetter + `${columnIndex + 1}`;
 
-      grid[cell] = number;
-    }
-  });
+      if (cell) {
+        result[cellIndex] = cell;
+      }
+    });
+
+    return result;
+  }, {});
 
   return grid;
 };
