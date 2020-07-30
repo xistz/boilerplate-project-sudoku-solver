@@ -25,22 +25,99 @@ const combinationValid = (combination) => {
   return result;
 };
 
+const combinationsValid = (combinations) => {
+  return combinations
+    .map((combination) => {
+      return combinationValid(combination);
+    })
+    .every((combinationValid) => {
+      return combinationValid;
+    });
+};
+
+const completedPuzzleValid = (puzzleString) => {
+  return /^[1-9]{81}$/.test(puzzleString);
+};
+
 const getBoxes = (puzzleString) => {
-  if (!puzzleValid(puzzleString)) {
+  if (!completedPuzzleValid(puzzleString)) {
     return [];
   }
+
+  const boxes = puzzleString
+    .match(/.{27}/g)
+    .map((boxRow) => {
+      return boxRow.match(/.{3}/g).reduce((result, triplet, index) => {
+        const tripletIndex = index % 3;
+        result[tripletIndex] = [...result[tripletIndex], ...triplet];
+
+        return result;
+      }, Array(3).fill([]));
+    })
+    .reduce((result, boxRow) => {
+      result = [...result, ...boxRow];
+
+      return result;
+    }, [])
+    .map((box) => {
+      return box.map((cell) => {
+        const number = parseInt(cell);
+
+        return number;
+      });
+    });
+
+  return boxes;
 };
 
 const getRows = (puzzleString) => {
-  if (!puzzleValid(puzzleString)) {
+  if (!completedPuzzleValid(puzzleString)) {
     return [];
   }
+
+  const rows = puzzleString
+    .match(/.{9}/g)
+    .map((rowString) => {
+      return rowString.split('');
+    })
+    .map((row) => {
+      return row.map((cell) => {
+        const number = parseInt(cell);
+
+        return number;
+      });
+    });
+
+  return rows;
 };
 
 const getColumns = (puzzleString) => {
-  if (!puzzleValid(puzzleString)) {
+  if (!completedPuzzleValid(puzzleString)) {
     return [];
   }
+
+  const columns = puzzleString.split('').reduce((result, cell, index) => {
+    const rowIndex = index % 9;
+    const number = parseInt(cell);
+
+    result[rowIndex] = [...result[rowIndex], number];
+
+    return result;
+  }, Array(9).fill([]));
+
+  return columns;
+};
+
+const SolutionValid = (puzzleString) => {
+  const boxes = getBoxes(puzzleString);
+  const rows = getRows(puzzleString);
+  const columns = getColumns(puzzleString);
+
+  const boxesValid = combinationsValid(boxes);
+  const rowsValid = combinationsValid(rows);
+  const columnsValid = combinationsValid(columns);
+
+  return [boxesValid, rowsValid, columnsValid].every((pattern) => pattern);
 };
 
 const GetGrid = (puzzleString) => {
@@ -85,5 +162,6 @@ try {
   module.exports = {
     InputValid,
     GetGrid,
+    SolutionValid,
   };
 } catch (e) {}

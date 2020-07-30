@@ -116,13 +116,14 @@ suite('UnitTests', () => {
     });
   });
 
-  suite('Function ____()', () => {
+  suite('Function SolutionValid()', () => {
     // Valid complete puzzles pass
     test('Valid puzzles pass', (done) => {
       const input =
         '769235418851496372432178956174569283395842761628713549283657194516924837947381625';
 
-      // done();
+      assert.isTrue(Solver.SolutionValid(input));
+      done();
     });
 
     // Invalid complete puzzles fail
@@ -130,7 +131,8 @@ suite('UnitTests', () => {
       const input =
         '779235418851496372432178956174569283395842761628713549283657194516924837947381625';
 
-      // done();
+      assert.isFalse(Solver.SolutionValid(input));
+      done();
     });
   });
 
