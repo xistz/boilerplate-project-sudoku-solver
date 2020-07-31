@@ -112,7 +112,7 @@ const SolutionValid = (puzzleString) => {
   return [boxesValid, rowsValid, columnsValid].every((pattern) => pattern);
 };
 
-const GetGrid = (puzzleString) => {
+const GetGridObject = (puzzleString) => {
   if (!puzzleValid(puzzleString)) {
     const errorDiv = document.getElementById('error-msg');
     errorDiv.innerHTML = 'Error: Expected puzzle to be 81 characters long.';
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
 try {
   module.exports = {
     InputValid,
-    GetGrid,
+    GetGridObject,
     SolutionValid,
   };
 } catch (e) {}

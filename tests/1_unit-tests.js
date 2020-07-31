@@ -50,7 +50,7 @@ suite('UnitTests', () => {
     });
   });
 
-  suite('Function GetGrid()', () => {
+  suite('Function GetGridObject()', () => {
     test('Parses a valid puzzle string into an object', (done) => {
       const input =
         '..9..5.1.85.4....2432......1...69.83.9.....6.62.71...9......1945....4.37.4.3..6..';
@@ -89,7 +89,7 @@ suite('UnitTests', () => {
         I7: 6,
       };
 
-      const got = Solver.GetGrid(input);
+      const got = Solver.GetGridObject(input);
 
       assert.isObject(got);
       assert.deepEqual(got, expected);
@@ -108,7 +108,7 @@ suite('UnitTests', () => {
       const errorDiv = document.getElementById('error-msg');
 
       [shortStr, longStr].forEach((puzzle) => {
-        Solver.GetGrid(puzzle);
+        Solver.GetGridObject(puzzle);
         assert.equal(errorDiv.innerHTML, errorMsg);
       });
 
