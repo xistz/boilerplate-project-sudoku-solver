@@ -27,12 +27,12 @@ suite('Functional Tests', () => {
       const input =
         '7.9..5.1.85.4....2432......1...69.83.9.....6.62.71...9......1945....4.37.4.3..6..';
 
-      const textarea = document.getElementById('text-input');
-      textarea.value = input;
-      textarea.addEventListener('input', Solver.UpdateGrid);
+      const textArea = document.getElementById('text-input');
+      textArea.value = input;
+      textArea.addEventListener('input', Solver.UpdateGrid);
 
       const event = new window.Event('input');
-      textarea.dispatchEvent(event);
+      textArea.dispatchEvent(event);
 
       input.split('').forEach((char, index) => {
         const rowLetter = String.fromCharCode(Math.floor(index / 9) + 65);
@@ -67,8 +67,8 @@ suite('Functional Tests', () => {
         const event = new window.Event('input');
         cell.dispatchEvent(event);
 
-        const textarea = document.getElementById('text-input');
-        const puzzleString = textarea.value;
+        const textArea = document.getElementById('text-input');
+        const puzzleString = textArea.value;
         const puzzle = puzzleString.split('');
 
         assert.equal(puzzle[index], input);
@@ -81,8 +81,21 @@ suite('Functional Tests', () => {
   suite('Clear and solve buttons', () => {
     // Pressing the "Clear" button clears the sudoku
     // grid and the text area
-    test('Function clearInput()', (done) => {
-      // done();
+    test('Function ClearInput()', (done) => {
+      const clearButton = document.getElementById('clear-button');
+      clearButton.addEventListener('click', Solver.ClearInput);
+
+      const event = new window.Event('click');
+      clearButton.dispatchEvent(event);
+
+      const textArea = document.getElementById('text-input');
+      assert.equal(textArea.value, '');
+
+      [...document.getElementsByClassName('sudoku-input')].forEach((cell) => {
+        assert.equal(cell.value, '');
+      });
+
+      done();
     });
 
     // Pressing the "Solve" button solves the puzzle and

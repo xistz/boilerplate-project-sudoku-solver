@@ -165,14 +165,14 @@ const UpdatePuzzleString = (e) => {
     return;
   }
 
-  const textInputIndex = getTextInputIndex(id);
+  const puzzleStringIndex = getPuzzleStringIndex(id);
 
-  const textInput = textArea.value.split('');
-  textInput[textInputIndex] = value;
-  textArea.value = textInput.join('');
+  const puzzle = textArea.value.split('');
+  puzzle[puzzleStringIndex] = value;
+  textArea.value = puzzle.join('');
 };
 
-const getTextInputIndex = (cellIndex) => {
+const getPuzzleStringIndex = (cellIndex) => {
   const [, row, column] = cellIndex.match(/^(?<row>[A-I])(?<column>[1-9])$/);
 
   const index = (row.charCodeAt(0) - 65) * 9 + parseInt(column) - 1;
@@ -180,11 +180,20 @@ const getTextInputIndex = (cellIndex) => {
   return index;
 };
 
+const ClearInput = () => {
+  textArea.value = '';
+
+  [...document.getElementsByClassName('sudoku-input')].forEach((cell) => {
+    cell.value = '';
+  });
+};
+
 // event listeners
 textArea.addEventListener('input', UpdateGrid);
-[...document.getElementsByClassName('sudoku-input')].forEach((element) => {
-  element.addEventListener('input', UpdatePuzzleString);
+[...document.getElementsByClassName('sudoku-input')].forEach((cell) => {
+  cell.addEventListener('input', UpdatePuzzleString);
 });
+document.getElementById('clear-button').addEventListener('click', ClearInput);
 
 document.addEventListener('DOMContentLoaded', () => {
   // Load a simple puzzle into the text area
@@ -209,5 +218,6 @@ try {
     SolutionValid,
     UpdateGrid,
     UpdatePuzzleString,
+    ClearInput,
   };
 } catch (e) {}
