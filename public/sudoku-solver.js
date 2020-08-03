@@ -113,8 +113,10 @@ const SolutionValid = (puzzleString) => {
 };
 
 const GetGridObject = (puzzleString) => {
+  const errorDiv = document.getElementById('error-msg');
+  errorDiv.innerHTML = '';
+
   if (!puzzleValid(puzzleString)) {
-    const errorDiv = document.getElementById('error-msg');
     errorDiv.innerHTML = 'Error: Expected puzzle to be 81 characters long.';
 
     return {};
@@ -137,12 +139,62 @@ const GetGridObject = (puzzleString) => {
   return grid;
 };
 
+const setGrid = (gridObject) => {
+  for (const [cellIndex, value] of Object.entries(gridObject)) {
+    const cell = document.getElementById(cellIndex);
+
+    cell.value = value;
+  }
+};
+
+const UpdateGrid = (e) => {
+  const { value } = e.target;
+
+  if (!puzzleValid(value)) {
+    return;
+  }
+
+  const gridObject = GetGridObject(value);
+  setGrid(gridObject);
+};
+
+const UpdatePuzzleString = (e) => {
+  const { value, id } = e.target;
+
+  if (!value || !InputValid(value)) {
+    return;
+  }
+
+  const textInputIndex = getTextInputIndex(id);
+
+  const textInput = textArea.value.split('');
+  textInput[textInputIndex] = value;
+  textArea.value = textInput.join('');
+};
+
+const getTextInputIndex = (cellIndex) => {
+  const [, row, column] = cellIndex.match(/^(?<row>[A-I])(?<column>[1-9])$/);
+
+  const index = (row.charCodeAt(0) - 65) * 9 + parseInt(column) - 1;
+
+  return index;
+};
+
+// event listeners
+textArea.addEventListener('input', UpdateGrid);
+[...document.getElementsByClassName('sudoku-input')].forEach((element) => {
+  element.addEventListener('input', UpdatePuzzleString);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   // Load a simple puzzle into the text area
   const puzzle =
     '..9..5.1.85.4....2432......1...69.83.9.....6.62.71...9......1945....4.37.4.3..6..';
 
   textArea.value = puzzle;
+
+  const event = new Event('input');
+  textArea.dispatchEvent(event);
 });
 
 /* 
@@ -155,5 +207,7 @@ try {
     InputValid,
     GetGridObject,
     SolutionValid,
+    UpdateGrid,
+    UpdatePuzzleString,
   };
 } catch (e) {}
