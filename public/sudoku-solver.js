@@ -1,12 +1,71 @@
 const textArea = document.getElementById('text-input');
 // import { puzzlesAndSolutions } from './puzzle-strings.js';
 
+// sudoku table
+const COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+
+const cells = ROWS.reduce((result, row) => {
+  const rowCells = COLUMNS.map((column) => `${row}${column}`);
+  result = [...result, ...rowCells];
+
+  return result;
+}, []);
+const cellsByRow = ROWS.map((row) => {
+  return COLUMNS.map((column) => `${row}${column}`);
+});
+const cellsByColumn = COLUMNS.map((column) => {
+  return ROWS.map((row) => `${row}${column}`);
+});
+const cellsByBox = [
+  ['A', 'B', 'C'],
+  ['D', 'E', 'F'],
+  ['G', 'H', 'I'],
+]
+  .map((rows) => {
+    // each triplet (eg. [A, B, C])
+    return [
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 9],
+    ].map((columns) => {
+      // each triplet (eg. [1, 2, 3])
+      return rows
+        .map((row) => {
+          return columns.map((column) => `${row}${column}`); // [A1, A2, A3]
+        })
+        .reduce((result, box) => [...result, ...box], []);
+    });
+  })
+  .reduce((result, row) => [...result, ...row], []);
+
 const InputValid = (input) => {
   return /^[1-9]$/.test(input);
 };
 
 const puzzleValid = (puzzleString) => {
   return /^([1-9]|\.){81}$/.test(puzzleString);
+};
+
+const GetGridObject = (puzzleString) => {
+  const errorDiv = document.getElementById('error-msg');
+  errorDiv.innerHTML = '';
+
+  if (!puzzleValid(puzzleString)) {
+    errorDiv.innerHTML = 'Error: Expected puzzle to be 81 characters long.';
+
+    return {};
+  }
+
+  const grid = puzzleString.split('').reduce((result, cell, index) => {
+    const number = parseInt(cell) || '';
+
+    result[cells[index]] = number;
+
+    return result;
+  }, {});
+
+  return grid;
 };
 
 const combinationValid = (combination) => {
@@ -20,7 +79,7 @@ const combinationValid = (combination) => {
     counts[cell - 1] += 1;
   });
 
-  const result = counts.every((count) => count == 1);
+  const result = counts.every((count) => count === 1);
 
   return result;
 };
@@ -39,61 +98,30 @@ const completedPuzzleValid = (puzzleString) => {
   return /^[1-9]{81}$/.test(puzzleString);
 };
 
-const getBoxes = (puzzleString) => {
-  const boxes = puzzleString
-    .match(/.{27}/g)
-    .map((boxRow) => {
-      return boxRow.match(/.{3}/g).reduce((result, triplet, index) => {
-        const tripletIndex = index % 3;
-        result[tripletIndex] = [...result[tripletIndex], ...triplet];
+const getCombinations = (puzzleString, combinationType) => {
+  const gridObject = GetGridObject(puzzleString);
 
-        return result;
-      }, Array(3).fill([]));
-    })
-    .reduce((result, boxRow) => {
-      result = [...result, ...boxRow];
+  let cellOrder;
 
-      return result;
-    }, [])
-    .map((box) => {
-      return box.map((cell) => {
-        const number = parseInt(cell) || '';
+  switch (combinationType) {
+    case 'box':
+      cellOrder = cellsByBox;
+      break;
+    case 'column':
+      cellOrder = cellsByColumn;
+      break;
+    case 'row':
+      cellOrder = cellsByRow;
+      break;
+  }
 
-        return number;
-      });
+  const combinations = cellOrder.map((order) => {
+    return order.map((cell) => {
+      return gridObject[cell];
     });
+  });
 
-  return boxes;
-};
-
-const getRows = (puzzleString) => {
-  const rows = puzzleString
-    .match(/.{9}/g)
-    .map((rowString) => {
-      return rowString.split('');
-    })
-    .map((row) => {
-      return row.map((cell) => {
-        const number = parseInt(cell) || '';
-
-        return number;
-      });
-    });
-
-  return rows;
-};
-
-const getColumns = (puzzleString) => {
-  const columns = puzzleString.split('').reduce((result, cell, index) => {
-    const rowIndex = index % 9;
-    const number = parseInt(cell) || '';
-
-    result[rowIndex] = [...result[rowIndex], number];
-
-    return result;
-  }, Array(9).fill([]));
-
-  return columns;
+  return combinations;
 };
 
 const SolutionValid = (puzzleString) => {
@@ -101,42 +129,15 @@ const SolutionValid = (puzzleString) => {
     return false;
   }
 
-  const boxes = getBoxes(puzzleString);
-  const rows = getRows(puzzleString);
-  const columns = getColumns(puzzleString);
+  const boxes = getCombinations(puzzleString, 'box');
+  const rows = getCombinations(puzzleString, 'row');
+  const columns = getCombinations(puzzleString, 'column');
 
   const boxesValid = combinationsValid(boxes);
   const rowsValid = combinationsValid(rows);
   const columnsValid = combinationsValid(columns);
 
   return [boxesValid, rowsValid, columnsValid].every((pattern) => pattern);
-};
-
-const GetGridObject = (puzzleString) => {
-  const errorDiv = document.getElementById('error-msg');
-  errorDiv.innerHTML = '';
-
-  if (!puzzleValid(puzzleString)) {
-    errorDiv.innerHTML = 'Error: Expected puzzle to be 81 characters long.';
-
-    return {};
-  }
-
-  const grid = getRows(puzzleString).reduce((result, row, rowIndex) => {
-    const rowLetter = String.fromCharCode(rowIndex + 65);
-
-    row.forEach((cell, columnIndex) => {
-      const cellIndex = rowLetter + `${columnIndex + 1}`;
-
-      if (cell) {
-        result[cellIndex] = cell;
-      }
-    });
-
-    return result;
-  }, {});
-
-  return grid;
 };
 
 const setGrid = (gridObject) => {
@@ -158,6 +159,14 @@ const UpdateGrid = (e) => {
   setGrid(gridObject);
 };
 
+const getPuzzleStringIndex = (cellIndex) => {
+  const [, row, column] = cellIndex.match(/^(?<row>[A-I])(?<column>[1-9])$/);
+
+  const index = (row.charCodeAt(0) - 65) * 9 + parseInt(column) - 1;
+
+  return index;
+};
+
 const UpdatePuzzleString = (e) => {
   const { value, id } = e.target;
 
@@ -172,14 +181,6 @@ const UpdatePuzzleString = (e) => {
   textArea.value = puzzle.join('');
 };
 
-const getPuzzleStringIndex = (cellIndex) => {
-  const [, row, column] = cellIndex.match(/^(?<row>[A-I])(?<column>[1-9])$/);
-
-  const index = (row.charCodeAt(0) - 65) * 9 + parseInt(column) - 1;
-
-  return index;
-};
-
 const ClearInput = () => {
   textArea.value = '';
 
@@ -188,12 +189,31 @@ const ClearInput = () => {
   });
 };
 
+const GetSolution = () => {
+  const puzzleString = textArea.value;
+};
+
+const getTree = () => {
+  const tree = cells.reduce((result, cell) => {
+    const row = cell.charAt(0);
+    const column = cell.charAt(1);
+
+    const combinations = [
+      columns.map((c) => `${row}${c}`),
+      rows.map((r) => `${r}${column}`),
+    ];
+  }, {});
+};
+
+const getBox = (cell) => {};
+
 // event listeners
 textArea.addEventListener('input', UpdateGrid);
 [...document.getElementsByClassName('sudoku-input')].forEach((cell) => {
   cell.addEventListener('input', UpdatePuzzleString);
 });
 document.getElementById('clear-button').addEventListener('click', ClearInput);
+document.getElementById('solve-button').addEventListener('click', GetSolution);
 
 document.addEventListener('DOMContentLoaded', () => {
   // Load a simple puzzle into the text area
