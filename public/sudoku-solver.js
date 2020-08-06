@@ -5,19 +5,26 @@ const textArea = document.getElementById('text-input');
 const COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
 
-const cells = ROWS.reduce((result, row) => {
+// ['A1', 'A2', 'A3', 'A4', ...]
+const CELLS = ROWS.reduce((result, row) => {
   const rowCells = COLUMNS.map((column) => `${row}${column}`);
   result = [...result, ...rowCells];
 
   return result;
 }, []);
+
+// [['A1', 'A2', ...], ['B1', 'B2', ...], ...]
 const cellsByRow = ROWS.map((row) => {
   return COLUMNS.map((column) => `${row}${column}`);
 });
+
+// [['A1', 'B1', ...], ['A2', 'B2', ...], ...]
 const cellsByColumn = COLUMNS.map((column) => {
   return ROWS.map((row) => `${row}${column}`);
 });
-const cellsByBox = [
+
+// [['A1', 'A2', 'A3', 'B1', ...], ...]
+const BOXES = [
   ['A', 'B', 'C'],
   ['D', 'E', 'F'],
   ['G', 'H', 'I'],
@@ -38,6 +45,41 @@ const cellsByBox = [
     });
   })
   .reduce((result, row) => [...result, ...row], []);
+
+// { A1: [box, row, column], ...}
+const COMBINATIONS = CELLS.reduce((result, cell, index) => {
+  const boxIndex = BOXES.findIndex((box) => box.includes(cell));
+  const rowIndex = cellsByRow.findIndex((row) => row.includes(cell));
+  const columnIndex = cellsByColumn.findIndex((column) =>
+    column.includes(cell)
+  );
+
+  result[cell] = [
+    [...BOXES[boxIndex]],
+    [...cellsByRow[rowIndex]],
+    [...cellsByColumn[columnIndex]],
+  ];
+
+  return result;
+}, {});
+
+const PEERS = CELLS.reduce((result, cell) => {
+  const combinations = COMBINATIONS[cell];
+
+  const peers = combinations.reduce((peerResult, combination) => {
+    combination.forEach((cell) => {
+      peerResult.add(cell);
+    });
+
+    peerResult.delete(cell);
+
+    return peerResult;
+  }, new Set());
+
+  result[cell] = [...peers];
+
+  return result;
+}, {});
 
 const InputValid = (input) => {
   return /^[1-9]$/.test(input);
@@ -60,7 +102,7 @@ const GetGridObject = (puzzleString) => {
   const grid = puzzleString.split('').reduce((result, cell, index) => {
     const number = parseInt(cell) || '';
 
-    result[cells[index]] = number;
+    result[CELLS[index]] = number;
 
     return result;
   }, {});
@@ -105,7 +147,7 @@ const getCombinations = (puzzleString, combinationType) => {
 
   switch (combinationType) {
     case 'box':
-      cellOrder = cellsByBox;
+      cellOrder = BOXES;
       break;
     case 'column':
       cellOrder = cellsByColumn;
@@ -189,23 +231,64 @@ const ClearInput = () => {
   });
 };
 
+const Solve = (puzzleString) => {
+  const matches = puzzleString.match(/\./);
+
+  // completed
+  if (!matches) {
+    return puzzleString;
+  }
+
+  // get next empty cell
+  const { index } = matches;
+  const cell = CELLS[index];
+
+  const choices = getChoices(cell, puzzleString);
+
+  for (const choice of choices) {
+    const updatedPuzzleString = puzzleString.replace(/\./, choice);
+    const solvedPuzzleString = Solve(updatedPuzzleString);
+
+    // unable to continue solving, try next choice
+    if (/\./.test(solvedPuzzleString)) {
+      continue;
+    }
+
+    return solvedPuzzleString;
+  }
+
+  // exhausted all choices
+  return puzzleString;
+};
+
+const getChoices = (cell, puzzleString) => {
+  const gridObject = GetGridObject(puzzleString);
+
+  const cellCombinationsUnique = PEERS[cell];
+
+  const constraints = cellCombinationsUnique.reduce((result, cellIndex) => {
+    const constraint = gridObject[cellIndex];
+
+    if (constraint) {
+      return result.add(constraint);
+    }
+
+    return result;
+  }, new Set());
+
+  const choices = [1, 2, 3, 4, 5, 6, 7, 8, 9].reduce((result, choice) => {
+    if (constraints.has(choice)) {
+      return result;
+    }
+    return [...result, choice];
+  }, []);
+
+  return choices;
+};
+
 const GetSolution = () => {
   const puzzleString = textArea.value;
 };
-
-const getTree = () => {
-  const tree = cells.reduce((result, cell) => {
-    const row = cell.charAt(0);
-    const column = cell.charAt(1);
-
-    const combinations = [
-      columns.map((c) => `${row}${c}`),
-      rows.map((r) => `${r}${column}`),
-    ];
-  }, {});
-};
-
-const getBox = (cell) => {};
 
 // event listeners
 textArea.addEventListener('input', UpdateGrid);
@@ -239,5 +322,6 @@ try {
     UpdateGrid,
     UpdatePuzzleString,
     ClearInput,
+    Solve,
   };
 } catch (e) {}
