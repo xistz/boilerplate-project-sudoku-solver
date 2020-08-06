@@ -100,8 +100,35 @@ suite('Functional Tests', () => {
 
     // Pressing the "Solve" button solves the puzzle and
     // fills in the grid with the solution
-    test('Function showSolution(solve(input))', (done) => {
-      // done();
+    test('Function GetSolution(Solve(input))', (done) => {
+      const textArea = document.getElementById('text-input');
+      const solveButton = document.getElementById('solve-button');
+      const cellsInput = [...document.getElementsByClassName('sudoku-input')];
+
+      const input =
+        '..9..5.1.85.4....2432......1...69.83.9.....6.62.71...9......1945....4.37.4.3..6..';
+      const expectedPuzzleString =
+        '769235418851496372432178956174569283395842761628713549283657194516924837947381625';
+
+      textArea.value = input;
+
+      solveButton.addEventListener('click', Solver.GetSolution);
+      const event = new window.Event('click');
+      solveButton.dispatchEvent(event);
+
+      const gotPuzzleString = textArea.value;
+      assert.equal(gotPuzzleString, expectedPuzzleString);
+
+      const gotGridObject = Solver.GetGridObject(gotPuzzleString);
+
+      cellsInput.forEach((cellInput) => {
+        const { id: cell, value: expected } = cellInput;
+        const got = gotGridObject[cell];
+
+        assert.equal(got, expected);
+      });
+
+      done();
     });
   });
 });

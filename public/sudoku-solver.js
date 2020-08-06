@@ -288,6 +288,12 @@ const getChoices = (cell, puzzleString) => {
 
 const GetSolution = () => {
   const puzzleString = textArea.value;
+
+  const solvedPuzzleString = Solve(puzzleString);
+  textArea.value = solvedPuzzleString;
+
+  const event = new window.Event('input');
+  textArea.dispatchEvent(event);
 };
 
 // event listeners
@@ -323,5 +329,6 @@ try {
     UpdatePuzzleString,
     ClearInput,
     Solve,
+    GetSolution,
   };
 } catch (e) {}
